@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock in-memory comments (replace with real DB later)
-const comments: any[] = [];
+export const comments: any[] = [];
+
 
 export const createComment = (req: Request, res: Response) => {
   const { userId, content } = req.body;
