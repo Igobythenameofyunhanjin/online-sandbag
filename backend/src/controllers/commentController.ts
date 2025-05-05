@@ -1,63 +1,90 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../utils/supabaseClient';
 
-// Mock in-memory comments (replace with real DB later)
-export const comments: any[] = [];
-
-
-export const createComment = (req: Request, res: Response) => {
+export const createComment = async (req: Request, res: Response) => {
   const { userId, content } = req.body;
 
   if (!userId || !content) {
     return res.status(400).json({ message: 'userId and content are required.' });
   }
 
-  const newComment = {
-    id: uuidv4(),
-    userId,
-    content,
-    isReadByAdmin: false,
-    createdAt: new Date(),
-  };
+  const { data, error } = await supabase.from('comments').insert([
+    {
+      id: uuidv4(),
+      user_id: userId,
+      content,
+    },
+  ]);
 
-  comments.push(newComment);
+  if (error) {
+    return res.status(500).json({ message: 'Failed to create comment', error });
+  }
 
-  res.status(201).json({ message: 'Comment created.', comment: newComment });
+  res.status(201).json({ message: 'Comment created.', comment: data?.[0] });
 };
 
-export const getOwnComments = (req: Request, res: Response) => {
+export const getOwnComments = async (req: Request, res: Response) => {
   const { userId } = req.query;
 
-  if (!userId) {
+  if (!userId || typeof userId !== 'string') {
     return res.status(400).json({ message: 'userId is required.' });
   }
 
-  const userComments = comments.filter(c => c.userId === userId);
-  res.status(200).json(userComments);
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return res.status(500).json({ message: 'Failed to fetch comments', error });
+  }
+
+  res.status(200).json(data);
 };
 
-export const updateOwnComment = (req: Request, res: Response) => {
+export const updateOwnComment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId, content } = req.body;
 
-  const comment = comments.find(c => c.id === id && c.userId === userId);
-  if (!comment) {
+  const { data: existing, error: fetchError } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .single();
+
+  if (fetchError || !existing) {
     return res.status(404).json({ message: 'Comment not found or unauthorized.' });
   }
 
-  comment.content = content;
-  res.status(200).json({ message: 'Comment updated.', comment });
+  const { data, error } = await supabase
+    .from('comments')
+    .update({ content })
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    return res.status(500).json({ message: 'Failed to update comment', error });
+  }
+
+  res.status(200).json({ message: 'Comment updated.', comment: data?.[0] });
 };
 
-export const deleteOwnComment = (req: Request, res: Response) => {
+export const deleteOwnComment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.body;
 
-  const index = comments.findIndex(c => c.id === id && c.userId === userId);
-  if (index === -1) {
-    return res.status(404).json({ message: 'Comment not found or unauthorized.' });
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    return res.status(500).json({ message: 'Failed to delete comment', error });
   }
 
-  comments.splice(index, 1);
   res.status(200).json({ message: 'Comment deleted.' });
 };
