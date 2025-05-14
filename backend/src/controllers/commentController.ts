@@ -27,21 +27,28 @@ export const createComment = async (req: Request, res: Response) => {
 export const getOwnComments = async (req: Request, res: Response) => {
   const { userId } = req.query;
 
-  if (!userId || typeof userId !== 'string') {
-    return res.status(400).json({ message: 'userId is required.' });
+  if (!userId || typeof userId !== "string") {
+    return res.status(400).json({ message: "userId is required." });
   }
 
   const { data, error } = await supabase
-    .from('comments')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .from("comments")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    return res.status(500).json({ message: 'Failed to fetch comments', error });
+    return res.status(500).json({ message: "Failed to fetch comments", error });
   }
 
-  res.status(200).json(data);
+  // Format dates before sending to the client
+  const formattedData = data?.map((comment) => ({
+    ...comment,
+    created_at: new Date(comment.created_at).toISOString(),
+  }));
+
+  res.status(200).json(formattedData);
+  console.log(formattedData);
 };
 
 export const updateOwnComment = async (req: Request, res: Response) => {

@@ -3,9 +3,10 @@ import axios from 'axios';
 
 interface Comment {
   id: string;
+  user_id: string;
   content: string;
-  isReadByAdmin: boolean;
-  createdAt: string;
+  is_read: boolean;
+  created_at: string; // Use the exact key as in your backend
 }
 
 export default function CommentsPage() {
@@ -87,11 +88,17 @@ export default function CommentsPage() {
           onChange={(e) => setCommentText(e.target.value)}
         />
         {editingId ? (
-          <button onClick={() => handleUpdate(editingId)} className="bg-blue-500 text-white px-4 py-2 rounded">
+          <button
+            onClick={() => handleUpdate(editingId)}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
             Update
           </button>
         ) : (
-          <button onClick={handleCreate} className="bg-red-500 text-white px-4 py-2 rounded">
+          <button
+            onClick={handleCreate}
+            className="bg-red-500 text-white px-4 py-2 rounded"
+          >
             Punch the Sandbag
           </button>
         )}
@@ -100,17 +107,36 @@ export default function CommentsPage() {
       <h2 className="text-xl font-semibold mb-2">🧾 Your Insults</h2>
       <ul className="space-y-3">
         {comments.map((c) => (
-          <li key={c.id} className="p-4 bg-white shadow rounded flex items-center justify-between">
+          <li
+            key={c.id}
+            className="p-4 bg-white shadow rounded flex items-center justify-between"
+          >
             <div className="w-[90%]">
               <p className="text-sm whitespace-pre-line">{c.content}</p>
-              <p className="text-xs text-gray-400 mt-1">{new Date(c.createdAt).toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {new Date(c.created_at).toLocaleString()}
+              </p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className={`w-3 h-3 rounded-full ${c.isReadByAdmin ? 'bg-red-500' : 'bg-green-400'}`} title={c.isReadByAdmin ? 'Read by admin' : 'Not read yet'}></span>
-              <button onClick={() => { setEditingId(c.id); setCommentText(c.content); }} className="text-blue-500 text-sm">
+              <span
+                className={`w-3 h-3 rounded-full ${
+                  c.is_read ? "bg-red-500" : "bg-green-400"
+                }`}
+                title={c.is_read ? "Read by admin" : "Not read yet"}
+              ></span>
+              <button
+                onClick={() => {
+                  setEditingId(c.id);
+                  setCommentText(c.content);
+                }}
+                className="text-blue-500 text-sm"
+              >
                 Edit
               </button>
-              <button onClick={() => handleDelete(c.id)} className="text-red-500 text-sm">
+              <button
+                onClick={() => handleDelete(c.id)}
+                className="text-red-500 text-sm"
+              >
                 Delete
               </button>
             </div>
