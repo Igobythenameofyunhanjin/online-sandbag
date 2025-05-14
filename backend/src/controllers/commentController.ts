@@ -48,7 +48,6 @@ export const getOwnComments = async (req: Request, res: Response) => {
   }));
 
   res.status(200).json(formattedData);
-  console.log(formattedData);
 };
 
 export const updateOwnComment = async (req: Request, res: Response) => {
